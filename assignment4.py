@@ -6,24 +6,24 @@ TRAINING_DOCUMENTS = "training_documents"
 
 class bag_of_words_model:
 
-  # class variables; to be initialized
+  # class variables; initialized in __init__
   vocabulary = {}
-  documents = []
   idf = None
 
   def __init__(self, directory):
     # directory is the full path to a directory containing trials through state space
     
-    self.read_documents(directory)
-    self.compute_idf()
+    self.train(directory)
 
     # Return nothing
 
-  def read_documents(self, directory):
+  def train(self, directory):
     # builds vocabulary and stores in an alphabetically-sorted list
     # stores documents in a 2D-list of the form documents[doc][word]
     vocabulary_set = set()
+    documents = []
     
+    # read and temporarily store documents
     for root, dirs, files in os.walk(directory):
       for file in files:
         words_in_document = []
@@ -39,19 +39,17 @@ class bag_of_words_model:
               words_in_document.extend(words)
               for w in words:
                 vocabulary_set.add(w)
-        self.documents.append(words_in_document)
+        documents.append(words_in_document)
 
+    # store vocabulary
     self.vocabulary = sorted(vocabulary_set)
 
-  def compute_idf(self):
-    # computes idf using training documents
-    # returns a list of idf values, parallel to the vocabulary list
-
-    num_documents = len(self.documents)
+    # compute and store idf
+    num_documents = len(documents)
     occurence_vector = []
     for word in self.vocabulary:
       occurences = 0
-      for document in self.documents:
+      for document in documents:
         if(word in document):
           occurences += 1
       occurence_vector.append(occurences)
@@ -59,8 +57,8 @@ class bag_of_words_model:
     self.idf = idf
 
   def tf(self, document_filepath):
-    # compute tf in document at document_filepath
-    tf = None
+    # compute the tf of the document at document_filepath
+
     with open(document_filepath, 'r') as f:
       for line in f:
          # skip empty lines
@@ -75,7 +73,7 @@ class bag_of_words_model:
           den = len(words)
           tf[index] = num/den
           index = index + 1
-    return tf
+        return tf
     
   def tf_idf(self, document_filepath):
     # document_filepath is the full file path to a test document
