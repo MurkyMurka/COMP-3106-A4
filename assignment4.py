@@ -2,8 +2,6 @@
 import numpy as np
 import os
 
-TRAINING_DOCUMENTS = "training_documents"
-
 class bag_of_words_model:
 
   # class variables; initialized in __init__
@@ -20,6 +18,7 @@ class bag_of_words_model:
   def train(self, directory):
     # builds vocabulary and stores in an alphabetically-sorted list
     # stores documents in a 2D-list of the form documents[doc][word]
+    
     vocabulary_set = set()
     documents = []
     
@@ -82,7 +81,7 @@ class bag_of_words_model:
     # compute tf vector for document at document_filepath
     tf = self.tf(document_filepath)
 
-    #compute and return tf-idf
+    # compute and return tf-idf
     tf_idf = tf * self.idf
     return tf_idf.tolist()
 
@@ -92,9 +91,60 @@ class bag_of_words_model:
     # entertainment_weights is a list of weights for the entertainment artificial neuron
     # politics_weights is a list of weights for the politics artificial neuron
 
+    topics = ["business", "entertainment", "politics"]
+
+    # get tf-idf from doc
+    tf_idf = self.tf_idf(document_filepath)
+
+    # get aggregate from neurons
+    o_business = self.aggregate(tf_idf, business_weights)
+    o_entertainment = self.aggregate(tf_idf, entertainment_weights)
+    o_politics = self.aggregate(tf_idf, politics_weights)
+
+    # get scores and predict label
+    scores = self.softmax([o_business, o_entertainment, o_politics])
+    predicted_label = topics[scores.index(max(scores))]
+
     # Return the predicted label from the neural network model
     # Return the score from each neuron
     return predicted_label, scores
   
-learner = bag_of_words_model("Examples/Example0/training_documents")
-print(learner.tf_idf("Examples/Example0/test_document.txt"))
+  def aggregate(self, x, weights):
+    # returns the aggregate value of a neuron using input and weights
+
+    return np.dot(weights, x)
+        
+  def softmax(self, y_vector):
+    # returns the softmax values of the given list as a list
+
+    ret_vector = []
+    den = 0
+    for y_j in y_vector:
+      den += np.exp(y_j)
+    for y_i in y_vector:
+      num = np.exp(y_i)
+      ret_vector.append(float(num/den))
+    return ret_vector
+
+# TEST
+
+example = 'Example2'
+
+learner = bag_of_words_model(f"Examples/{example}/training_documents")
+print(learner.tf_idf(f"Examples/{example}/test_document.txt"))
+
+# read weights from .txt file
+def read_weights(document_filepath):
+  with open(document_filepath, 'r') as f:
+    for line in f:
+      # skip empty lines
+      line = line.strip()
+      if not line:
+        continue
+      stringlist = line.split(",")
+  floatlist = []
+  for string in stringlist:
+    floatlist.append(float(string))
+  return floatlist
+
+print(learner.predict(f"Examples/{example}/test_document.txt", read_weights(f"Examples/{example}/business_weights.txt"), read_weights(f"Examples/{example}/entertainment_weights.txt"), read_weights(f"Examples/{example}/politics_weights.txt")))
