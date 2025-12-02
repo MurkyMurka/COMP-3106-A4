@@ -127,7 +127,7 @@ class bag_of_words_model:
     return ret_vector
 
 # TEST
-
+'''
 example = 'Example2'
 
 learner = bag_of_words_model(f"Examples/{example}/training_documents")
@@ -148,3 +148,4 @@ def read_weights(document_filepath):
   return floatlist
 
 print(learner.predict(f"Examples/{example}/test_document.txt", read_weights(f"Examples/{example}/business_weights.txt"), read_weights(f"Examples/{example}/entertainment_weights.txt"), read_weights(f"Examples/{example}/politics_weights.txt")))
+'''
